@@ -8,6 +8,21 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.3" />
+    <PackageReference Include="Savvyio.Extensions.EFCore.Domain" Version="4.0.1" />
+    <PackageReference Include="Stenn.AppData.EntityFrameworkCore" Version="7.1.4" />
+    <PackageReference Include="Stenn.EntityFrameworkCore" Version="7.9.50" />
+    <PackageReference Include="Stenn.EntityFrameworkCore.EntityConventions.Extensions.DependencyInjection" Version="7.9.50" />
+    <PackageReference Include="Stenn.EntityFrameworkCore.Extensions.DependencyInjection" Version="7.9.50" />
+    <PackageReference Include="Stenn.EntityFrameworkCore.HistoricalMigrations" Version="7.9.50" />
+    <PackageReference Include="Stenn.EntityFrameworkCore.HistoricalMigrations.Extensions.DependencyInjection" Version="7.9.50" />
+    <PackageReference Include="Stenn.EntityFrameworkCore.Relational" Version="7.9.50" />
+    <PackageReference Include="Stenn.EntityFrameworkCore.SqlServer" Version="7.9.50" />
+    <PackageReference Include="Stenn.EntityFrameworkCore.SqlServer.Extensions.DependencyInjection" Version="7.9.50" />
   </ItemGroup>
 
 </Project>
