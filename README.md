@@ -1,3 +1,4 @@
+
 # TicketToCode Challenge
 Ett Event Management System
 
@@ -115,3 +116,19 @@ Upplägg för redovisningen bör vara följande:
 - **Presentationer:** 27/03/2025, 28/03/2025  
 
 **Lycka till med ert projekt!**
+=======
+# Event Management System
+Detta är ett projekt för att hantera events, bokningar och användare med hjälp av Blazor, Web API och Entity Framework Core.
+
+## Funktioner
+- Skapa och hantera event
+- Bokningssystem
+- Användarhantering
+- API med autentisering
+
+## Tekniker som används
+- ASP.NET Core
+- Entity Framework Core
+- SQL Server
+- Blazor
+435d06b57610d5328672eda892845864bfb67334
