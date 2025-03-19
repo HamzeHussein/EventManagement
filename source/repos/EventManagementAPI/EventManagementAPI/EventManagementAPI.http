@@ -1,0 +1,11 @@
+@EventManagementAPI_HostAddress = http://localhost:5287
+
+GET {{EventManagementAPI_HostAddress}}/todos/
+Accept: application/json
+
+###
+
+GET {{EventManagementAPI_HostAddress}}/todos/1
+Accept: application/json
+
+###
