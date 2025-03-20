@@ -1,0 +1,37 @@
+﻿@page "/events"
+@inject EventService EventService
+
+<h3>Event List</h3>
+
+@if (events == null || !events.Any())
+{
+    <p>Laddar...</p>
+}
+else
+{
+    <ul>
+        @foreach (var eventItem in events)
+        {
+            <li>@eventItem.Name - @eventItem.Date</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Event> events = new List<Event>(); // Initialisera som en tom lista
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            events = await EventService.GetEventsAsync();
+        }
+        catch (Exception ex)
+        {
+            // Logga fel om något går fel vid hämtning
+            Console.WriteLine($"Fel vid hämtning av evenemang: {ex.Message}");
+        }
+    }
+}
+
+
