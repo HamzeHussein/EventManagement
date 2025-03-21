@@ -3,12 +3,18 @@ using TicketToCode.Client.Services; // Lägg till för att kunna injicera EventSer
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Lägg till HttpClient för EventService
+builder.Services.AddHttpClient<EventService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:5001/"); // Lägg till din API-URL här
+});
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Lägg till EventService för injektion i komponenter
-builder.Services.AddScoped<EventService>();  // Nytt tillägg här
+builder.Services.AddScoped<EventService>();
 
 var app = builder.Build();
 

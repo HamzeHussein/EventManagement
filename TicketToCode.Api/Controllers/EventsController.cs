@@ -16,12 +16,21 @@ namespace TicketToCode.Api.Endpoints
             _context = context;
         }
 
+        /// <summary>
+        /// Hämtar alla evenemang
+        /// </summary>
+        /// <returns>Lista med alla evenemang</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
         {
             return await _context.Events.ToListAsync();
         }
 
+        /// <summary>
+        /// Hämtar ett specifikt evenemang baserat på ID
+        /// </summary>
+        /// <param name="id">Evenemangets ID</param>
+        /// <returns>Det specifika evenemanget</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Event>> GetEvent(int id)
         {
@@ -31,6 +40,11 @@ namespace TicketToCode.Api.Endpoints
             return eventItem;
         }
 
+        /// <summary>
+        /// Skapar ett nytt evenemang
+        /// </summary>
+        /// <param name="eventItem">Evenemangets information</param>
+        /// <returns>Det skapade evenemanget</returns>
         [HttpPost]
         public async Task<ActionResult<Event>> PostEvent(Event eventItem)
         {
@@ -39,6 +53,12 @@ namespace TicketToCode.Api.Endpoints
             return CreatedAtAction(nameof(GetEvent), new { id = eventItem.Id }, eventItem);
         }
 
+        /// <summary>
+        /// Uppdaterar ett specifikt evenemang
+        /// </summary>
+        /// <param name="id">Evenemangets ID</param>
+        /// <param name="eventItem">Evenemangets nya information</param>
+        /// <returns>Ingen returnering om uppdateringen är lyckad</returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEvent(int id, Event eventItem)
         {
@@ -62,6 +82,11 @@ namespace TicketToCode.Api.Endpoints
             return NoContent();
         }
 
+        /// <summary>
+        /// Tar bort ett evenemang baserat på ID
+        /// </summary>
+        /// <param name="id">Evenemangets ID</param>
+        /// <returns>Ingen returnering om borttagning är lyckad</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
@@ -81,3 +106,4 @@ namespace TicketToCode.Api.Endpoints
         }
     }
 }
+

@@ -2,7 +2,10 @@
 using TicketToCode.Api.Endpoints;
 using TicketToCode.Api.Services;
 using TicketToCode.Core.Data;
-using TicketToCode.Client.Services; // Lägg till denna rad för att importera EventService
+using TicketToCode.Client.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.OpenApi.Models;
+using System.Net.Http; // Lägg till denna rad
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,18 +15,27 @@ builder.Services.AddDbContext<EventManagementDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Lägg till OpenAPI och Swagger
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "TicketToCode API", Version = "v1" });
+    // Ta bort raden som refererar till XML-kommentarer om du inte har den
+    // options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "TicketToCode.Api.xml"));
+});
 
 // Lägg till services för databasen och autentisering
 builder.Services.AddSingleton<IDatabase, Database>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-// Lägg till EventService för frontend (Blazor-klienten)
-builder.Services.AddScoped<EventService>(); // Lägg till denna rad för att registrera EventService
+// Lägg till EventService för frontend (Blazor-klienten) och HttpClient
+builder.Services.AddHttpClient<EventService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:5001"); // Uppdatera med din API:s bas-URL
+});
+builder.Services.AddScoped<EventService>();
 
 // Lägg till autentisering via Cookies
-builder.Services.AddAuthentication("Cookies")
-    .AddCookie("Cookies", options =>
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
         options.Cookie.Name = "auth";
         options.Cookie.HttpOnly = true;
@@ -34,21 +46,21 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Konfigurera utvecklingsspecifika inställningar för Swagger
+// Konfigurera Swagger för utvecklingsmiljö
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-
+    app.UseSwagger(); // Lägg till denna rad
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "TicketToCode API v1");
         options.DefaultModelsExpandDepth(-1);
     });
 }
 
-app.UseHttpsRedirection(); // Använd HTTPS om applikationen är på HTTPS
-app.UseAuthentication(); // Lägg till autentisering för att skydda API:t
-app.UseAuthorization();  // Lägg till auktorisation
+// Middleware för HTTPS, autentisering och auktorisation
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Mappla alla endpoints
 app.MapEndpoints<Program>();
