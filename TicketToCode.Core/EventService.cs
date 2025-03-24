@@ -30,7 +30,6 @@ namespace TicketToCode.Client.Services
             }
         }
 
-
         // Hämtar ett specifikt evenemang baserat på ID
         public async Task<Event> GetEventAsync(int id)
         {
@@ -77,6 +76,7 @@ namespace TicketToCode.Client.Services
         }
     }
 }
+
 
 
 

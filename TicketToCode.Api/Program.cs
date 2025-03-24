@@ -1,11 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TicketToCode.Api.Endpoints;
-using TicketToCode.Api.Services;
-using TicketToCode.Core.Data;
-using TicketToCode.Client.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.OpenApi.Models;
-using System.Net.Http; // Lägg till denna rad
+using TicketToCode.Api.Services;
+using TicketToCode.Core.Data;
+using TicketToCode.Core.Models;
+using TicketToCode.Client.Services;  // Lägg till denna rad för att importera EventService
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,23 +13,18 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<EventManagementDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Lägg till OpenAPI och Swagger
+// Lägg till Swagger för att dokumentera API:t
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "TicketToCode API", Version = "v1" });
-    // Ta bort raden som refererar till XML-kommentarer om du inte har den
-    // options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "TicketToCode.Api.xml"));
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "TicketToCode.Api.xml")); // För att inkludera XML-kommentarer om du har det
 });
 
 // Lägg till services för databasen och autentisering
 builder.Services.AddSingleton<IDatabase, Database>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-// Lägg till EventService för frontend (Blazor-klienten) och HttpClient
-builder.Services.AddHttpClient<EventService>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:5001"); // Uppdatera med din API:s bas-URL
-});
+// Lägg till EventService för frontend (Blazor-klienten)
 builder.Services.AddScoped<EventService>();
 
 // Lägg till autentisering via Cookies
@@ -53,7 +47,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "TicketToCode API v1");
-        options.DefaultModelsExpandDepth(-1);
+        options.DefaultModelsExpandDepth(-1);  // Döljer modelbeskrivningarna om du vill
     });
 }
 
@@ -62,8 +56,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Mappla alla endpoints
-app.MapEndpoints<Program>();
+// Mappa controllers (för controller-baserade API)
+app.MapControllers();  // Byt till detta om du använder controllers
 
 // Kör applikationen
 app.Run();

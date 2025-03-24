@@ -1,37 +1,28 @@
 using TicketToCode.Client.Components;
-using TicketToCode.Client.Services; // Lägg till för att kunna injicera EventService
+using TicketToCode.Client.Services; // För att kunna injicera EventService
+using Microsoft.Extensions.Configuration; // För att läsa appsettings.json
+using Microsoft.AspNetCore.Components; // För server-side Blazor
+using Microsoft.Extensions.DependencyInjection;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args); // För server-side Blazor
 
-// Lägg till HttpClient för EventService
+// Lägg till HttpClient för EventService och sätt bas-URL:en för API:t
 builder.Services.AddHttpClient<EventService>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:5001/"); // Lägg till din API-URL här
+    // Hämta API URL från appsettings.json
+    var apiUrl = builder.Configuration["ApiUrl"]; // Läser från appsettings.json
+    client.BaseAddress = new Uri(apiUrl); // Sätter base address för HttpClient
 });
 
-// Add services to the container.
+// Lägg till Razor Components för server-side Blazor
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(); // Lägg till för Blazor
 
 // Lägg till EventService för injektion i komponenter
-builder.Services.AddScoped<EventService>();
+builder.Services.AddScoped<EventService>(); // Lägg till EventService för DI
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-
-app.UseStaticFiles();
-app.UseAntiforgery();
-
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
+// Konfigurera appen
 app.Run();
+

@@ -16,54 +16,49 @@ namespace TicketToCode.Api.Endpoints
             _context = context;
         }
 
-        /// <summary>
-        /// Hämtar alla evenemang
-        /// </summary>
-        /// <returns>Lista med alla evenemang</returns>
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
-        {
-            return await _context.Events.ToListAsync();
-        }
-
-        /// <summary>
-        /// Hämtar ett specifikt evenemang baserat på ID
-        /// </summary>
-        /// <param name="id">Evenemangets ID</param>
-        /// <returns>Det specifika evenemanget</returns>
+        
         [HttpGet("{id}")]
         public async Task<ActionResult<Event>> GetEvent(int id)
         {
-            var eventItem = await _context.Events.FindAsync(id);
-            if (eventItem == null)
-                return NotFound();
-            return eventItem;
+            try
+            {
+                var eventItem = await _context.Events.FindAsync(id);
+                if (eventItem == null)
+                    return NotFound();  // Returnera 404 om inte hittat
+                return Ok(eventItem);  // Returnera evenemanget
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");  // Hantera fel
+            }
         }
 
-        /// <summary>
-        /// Skapar ett nytt evenemang
-        /// </summary>
-        /// <param name="eventItem">Evenemangets information</param>
-        /// <returns>Det skapade evenemanget</returns>
+       
         [HttpPost]
         public async Task<ActionResult<Event>> PostEvent(Event eventItem)
         {
-            _context.Events.Add(eventItem);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetEvent), new { id = eventItem.Id }, eventItem);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState); // Validering av modelldatat
+
+            try
+            {
+                _context.Events.Add(eventItem);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetEvent), new { id = eventItem.Id }, eventItem);  // Returnera 201 status och det skapade evenemanget
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");  // Hantera eventuella fel vid sparande
+            }
         }
 
-        /// <summary>
-        /// Uppdaterar ett specifikt evenemang
-        /// </summary>
-        /// <param name="id">Evenemangets ID</param>
-        /// <param name="eventItem">Evenemangets nya information</param>
-        /// <returns>Ingen returnering om uppdateringen är lyckad</returns>
+        
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEvent(int id, Event eventItem)
         {
             if (id != eventItem.Id)
-                return BadRequest();
+                return BadRequest("Event ID mismatch");  // Fel om ID:n inte matchar
 
             _context.Entry(eventItem).State = EntityState.Modified;
 
@@ -74,35 +69,38 @@ namespace TicketToCode.Api.Endpoints
             catch (DbUpdateConcurrencyException)
             {
                 if (!EventExists(id))
-                    return NotFound();
+                    return NotFound();  // Returnera 404 om inte eventet finns
                 else
-                    throw;
+                    throw;  // Hantera alla andra undantag
             }
 
-            return NoContent();
+            return NoContent();  // Retur 204 när uppdateringen är klar
         }
 
-        /// <summary>
-        /// Tar bort ett evenemang baserat på ID
-        /// </summary>
-        /// <param name="id">Evenemangets ID</param>
-        /// <returns>Ingen returnering om borttagning är lyckad</returns>
+       
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
             var eventItem = await _context.Events.FindAsync(id);
             if (eventItem == null)
-                return NotFound();
+                return NotFound();  // Returnera 404 om eventet inte finns
 
-            _context.Events.Remove(eventItem);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Events.Remove(eventItem);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");  // Hantera fel vid borttagning
+            }
 
-            return NoContent();
+            return NoContent();  // Returnera 204 när borttagning är slutförd
         }
 
         private bool EventExists(int id)
         {
-            return _context.Events.Any(e => e.Id == id);
+            return _context.Events.Any(e => e.Id == id);  // Kolla om eventet finns i databasen
         }
     }
 }
