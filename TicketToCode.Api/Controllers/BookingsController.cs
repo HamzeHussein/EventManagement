@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TicketToCode.Core.Data;
 using TicketToCode.Core.Models;
 
-namespace TicketToCode.Api.Endpoints
+namespace TicketToCode.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

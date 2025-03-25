@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TicketToCode.Core.Data;
 using TicketToCode.Core.Models;
 
-namespace TicketToCode.Api.Endpoints
+namespace TicketToCode.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -16,7 +16,6 @@ namespace TicketToCode.Api.Endpoints
             _context = context;
         }
 
-        
         [HttpGet("{id}")]
         public async Task<ActionResult<Event>> GetEvent(int id)
         {
@@ -33,7 +32,6 @@ namespace TicketToCode.Api.Endpoints
             }
         }
 
-       
         [HttpPost]
         public async Task<ActionResult<Event>> PostEvent(Event eventItem)
         {
@@ -53,7 +51,6 @@ namespace TicketToCode.Api.Endpoints
             }
         }
 
-        
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEvent(int id, Event eventItem)
         {
@@ -77,7 +74,6 @@ namespace TicketToCode.Api.Endpoints
             return NoContent();  // Retur 204 när uppdateringen är klar
         }
 
-       
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
@@ -104,4 +100,3 @@ namespace TicketToCode.Api.Endpoints
         }
     }
 }
-

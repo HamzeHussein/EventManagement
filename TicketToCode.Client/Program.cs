@@ -1,28 +1,38 @@
 using TicketToCode.Client.Components;
 using TicketToCode.Client.Services; // För att kunna injicera EventService
 using Microsoft.Extensions.Configuration; // För att läsa appsettings.json
-using Microsoft.AspNetCore.Components; // För server-side Blazor
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components.Server; // För server-side Blazor
 
-var builder = WebApplication.CreateBuilder(args); // För server-side Blazor
+var builder = WebApplication.CreateBuilder(args);
 
 // Lägg till HttpClient för EventService och sätt bas-URL:en för API:t
 builder.Services.AddHttpClient<EventService>(client =>
 {
-    // Hämta API URL från appsettings.json
     var apiUrl = builder.Configuration["ApiUrl"]; // Läser från appsettings.json
     client.BaseAddress = new Uri(apiUrl); // Sätter base address för HttpClient
 });
 
-// Lägg till Razor Components för server-side Blazor
+// Lägg till Blazor Server-tjänster
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents(); // Lägg till för Blazor
+    .AddInteractiveServerComponents(); // För server-side Blazor
 
 // Lägg till EventService för injektion i komponenter
-builder.Services.AddScoped<EventService>(); // Lägg till EventService för DI
+builder.Services.AddScoped<EventService>();
 
 var app = builder.Build();
 
-// Konfigurera appen
-app.Run();
+// Configure the HTTP request pipeline
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
 
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseAntiforgery();
+
+// Lägg till Blazor komponenter
+app.MapRazorComponents<App>();
+
+app.Run();

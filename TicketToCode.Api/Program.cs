@@ -1,63 +1,136 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using TicketToCode.Api.Services;
 using TicketToCode.Core.Data;
 using TicketToCode.Core.Models;
-using TicketToCode.Client.Services;  // Lägg till denna rad för att importera EventService
+using TicketToCode.Client.Services;
+using TicketToCode.Api.Endpoints;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Hämta connection string och konfigurera DbContext
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<EventManagementDbContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddControllers();
 
-// Lägg till Swagger för att dokumentera API:t
-builder.Services.AddSwaggerGen(options =>
+// Konfiguration
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
+// Logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+// Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+builder.Services.AddDbContext<EventManagementDbContext>(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "TicketToCode API", Version = "v1" });
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "TicketToCode.Api.xml")); // För att inkludera XML-kommentarer om du har det
+    options.UseSqlServer(connectionString,
+        sqlOptions => sqlOptions.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null));
+    options.EnableDetailedErrors(builder.Environment.IsDevelopment());
+    options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
 });
 
-// Lägg till services för databasen och autentisering
+// Services
 builder.Services.AddSingleton<IDatabase, Database>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-// Lägg till EventService för frontend (Blazor-klienten)
-builder.Services.AddScoped<EventService>();
+builder.Services.AddOpenApi();
 
-// Lägg till autentisering via Cookies
+
+
+
+// Autentisering och auktorisation
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "auth";
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.LoginPath = "/api/auth/login";
+        options.AccessDeniedPath = "/api/auth/access-denied";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+});
 
+// CORS (anpassa enligt dina behov)
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(builder.Configuration["AllowedOrigins"]?.Split(';') ?? new[] { "https://localhost:5001" })
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+// Bygg appen
 var app = builder.Build();
 
-// Konfigurera Swagger för utvecklingsmiljö
+// Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger(); // Lägg till denna rad
+    app.UseDeveloperExceptionPage();
+    app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "TicketToCode API v1");
-        options.DefaultModelsExpandDepth(-1);  // Döljer modelbeskrivningarna om du vill
+        options.SwaggerEndpoint("/openapi/v1.json", "TicketToCode API v1");
+        options.DefaultModelsExpandDepth(-1);
+        options.DisplayRequestDuration();
+        options.EnableTryItOutByDefault();
     });
 }
+else
+{
+    app.UseExceptionHandler("/error");
+    app.UseHsts();
+}
 
-// Middleware för HTTPS, autentisering och auktorisation
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseCors();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Mappa controllers (för controller-baserade API)
-app.MapControllers();  // Byt till detta om du använder controllers
+// Minimal API endpoints
+app.MapEndpoints<Program>();
 
-// Kör applikationen
+// Controller-baserade endpoints
+app.MapControllers();
+
+// Global felhantering
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Global felhantering");
+        throw;
+    }
+});
+
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }));
+
+// Kör appen
 app.Run();
+

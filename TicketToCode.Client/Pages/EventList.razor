@@ -1,24 +1,29 @@
 ﻿@page "/events"
+@using TicketToCode.Client.Services
+@using TicketToCode.Core.Models
 @inject EventService EventService
 
 <h3>Event List</h3>
 
 @if (events == null || !events.Any())
 {
-    <p>Laddar...</p>
+    <p>Loading events or no events available...</p>
 }
 else
 {
-    <ul>
+    <ul class="event-list">
         @foreach (var eventItem in events)
         {
-            <li>@eventItem.Name - @eventItem.Date</li>
+            <li class="event-item">
+                <h4>@eventItem.Name</h4>
+                <p>Date: @eventItem.Date.ToString("yyyy-MM-dd")</p>
+            </li>
         }
     </ul>
 }
 
 @code {
-    private List<Event> events = new List<Event>(); // Initialisera som en tom lista
+    private List<Event> events = new List<Event>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -28,10 +33,7 @@ else
         }
         catch (Exception ex)
         {
-            // Logga fel om något går fel vid hämtning
-            Console.WriteLine($"Fel vid hämtning av evenemang: {ex.Message}");
+            Console.WriteLine($"Error loading events: {ex.Message}");
         }
     }
 }
-
-
