@@ -74,5 +74,49 @@ namespace TicketToCode.Client.Services
                 return false;
             }
         }
+
+        // 🆕 Bokar en biljett till ett evenemang
+        public async Task<bool> BookTicketAsync(int eventId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/bookings", new { EventId = eventId });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // 🆕 Hämtar alla bokningar för inloggad användare
+        public async Task<List<Booking>> GetMyBookingsAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<Booking>>("api/bookings");
+                return response ?? new List<Booking>();
+            }
+            catch
+            {
+                return new List<Booking>();
+            }
+        }
+
+        // 🆕 Avbokar en bokning via ID
+        public async Task<bool> CancelBookingAsync(int bookingId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"api/bookings/{bookingId}");
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }
+
+

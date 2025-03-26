@@ -2,38 +2,64 @@
 @using TicketToCode.Client.Services
 @using TicketToCode.Core.Models
 @inject EventService EventService
+@inject NavigationManager Navigation
 
-<h3>Event List</h3>
+<h3>Kommande Evenemang</h3>
 
-@if (events == null || !events.Any())
+@if (events == null)
 {
-    <p>Loading events or no events available...</p>
+    <p>Laddar evenemang...</p>
+}
+else if (!events.Any())
+{
+    <p>Inga evenemang hittades.</p>
 }
 else
 {
-    <ul class="event-list">
+    <ul>
         @foreach (var eventItem in events)
         {
-            <li class="event-item">
-                <h4>@eventItem.Name</h4>
-                <p>Date: @eventItem.Date.ToString("yyyy-MM-dd")</p>
+            <li>
+                <strong>@eventItem.Name</strong><br />
+                <em>@eventItem.StartTime.ToString("yyyy-MM-dd HH:mm")</em><br />
+                <span>Plats: @eventItem.Location</span><br />
+                <span>Pris: @eventItem.Price kr</span><br />
+
+                <button @onclick="() => BookTicket(eventItem.Id)">Boka Biljett</button>
+                <button @onclick="() => ShowEventDetails(eventItem.Id)">Visa Detaljer</button>
             </li>
+            <hr />
         }
     </ul>
 }
 
 @code {
-    private List<Event> events = new List<Event>();
+    private List<Event>? events;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            events = await EventService.GetEventsAsync();
+            var result = await EventService.GetEventsAsync();
+            events = result.ToList();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading events: {ex.Message}");
+            Console.WriteLine($"Fel vid hämtning av evenemang: {ex.Message}");
         }
+    }
+
+    private async Task BookTicket(int eventId)
+    {
+        var success = await EventService.BookTicketAsync(eventId);
+        if (success)
+            Console.WriteLine($"Biljett bokad för event {eventId}");
+        else
+            Console.WriteLine("Kunde inte boka biljetten.");
+    }
+
+    private void ShowEventDetails(int eventId)
+    {
+        Navigation.NavigateTo($"/event/{eventId}");
     }
 }

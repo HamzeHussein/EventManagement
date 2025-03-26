@@ -1,0 +1,58 @@
+﻿@page "/bookings"
+@using TicketToCode.Client.Services
+@using TicketToCode.Core.Models
+@inject EventService EventService
+
+<h3>Mina bokningar</h3>
+
+@if (bookings == null)
+{
+    <p>Laddar bokningar...</p>
+}
+else if (!bookings.Any())
+{
+    <p>Du har inga bokningar ännu.</p>
+}
+else
+{
+    <ul>
+        @foreach (var booking in bookings)
+        {
+            <li>
+                <strong>Event:</strong> @booking.Event?.Name<br />
+                <strong>Datum:</strong> @booking.Event?.StartTime.ToString("yyyy-MM-dd HH:mm")<br />
+                <button @onclick="() => CancelBooking(booking.Id)">Avboka</button>
+            </li>
+            <hr />
+        }
+    </ul>
+}
+
+@code {
+    private List<Booking>? bookings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            bookings = await EventService.GetMyBookingsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fel vid hämtning av bokningar: {ex.Message}");
+        }
+    }
+
+    private async Task CancelBooking(int bookingId)
+    {
+        var success = await EventService.CancelBookingAsync(bookingId);
+        if (success)
+        {
+            bookings = bookings.Where(b => b.Id != bookingId).ToList();
+        }
+        else
+        {
+            Console.WriteLine("Kunde inte avboka bokningen.");
+        }
+    }
+}
